@@ -413,6 +413,7 @@ struct SectionCard<Content: View>: View {
 struct VoiceInputButton: View {
     @Binding var text: String
     @Binding var isRecording: Bool
+    @StateObject private var speechService = SpeechRecognitionService.shared
 
     var body: some View {
         Button(action: toggleRecording) {
@@ -431,8 +432,27 @@ struct VoiceInputButton: View {
     }
 
     private func toggleRecording() {
-        isRecording.toggle()
-        // Implement voice recording using Speech framework
+        if isRecording {
+            speechService.stopRecording()
+            isRecording = false
+        } else {
+            speechService.requestAuthorization { authorized in
+                guard authorized else {
+                    print("Speech recognition not authorized")
+                    return
+                }
+
+                do {
+                    try speechService.startRecording { recognizedText in
+                        text = recognizedText
+                    }
+                    isRecording = true
+                } catch {
+                    print("Error starting recording: \(error)")
+                    isRecording = false
+                }
+            }
+        }
     }
 }
 
