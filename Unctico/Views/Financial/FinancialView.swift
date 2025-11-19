@@ -1,10 +1,8 @@
 import SwiftUI
 
 struct FinancialView: View {
+    @ObservedObject private var repository = TransactionRepository.shared
     @State private var selectedPeriod: TimePeriod = .thisMonth
-    @State private var totalRevenue: Double = 0
-    @State private var totalExpenses: Double = 0
-    @State private var transactions: [Transaction] = []
 
     enum TimePeriod: String, CaseIterable {
         case thisWeek = "This Week"
@@ -13,8 +11,29 @@ struct FinancialView: View {
         case custom = "Custom"
     }
 
+    var dateRange: ClosedRange<Date> {
+        switch selectedPeriod {
+        case .thisWeek: return repository.getThisWeekRange()
+        case .thisMonth: return repository.getThisMonthRange()
+        case .thisYear: return repository.getThisYearRange()
+        case .custom: return repository.getThisMonthRange()
+        }
+    }
+
+    var totalRevenue: Double {
+        repository.getTotalRevenue(in: dateRange)
+    }
+
+    var totalExpenses: Double {
+        repository.getTotalExpenses(in: dateRange)
+    }
+
     var netIncome: Double {
         totalRevenue - totalExpenses
+    }
+
+    var transactions: [Transaction] {
+        repository.getRecentTransactions(limit: 10)
     }
 
     var body: some View {
@@ -38,11 +57,6 @@ struct FinancialView: View {
             .navigationTitle("Financial")
             .background(Color.massageBackground.opacity(0.3))
         }
-        .onAppear(perform: loadFinancialData)
-    }
-
-    private func loadFinancialData() {
-        // Load financial data
     }
 }
 

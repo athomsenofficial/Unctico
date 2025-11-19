@@ -1,8 +1,8 @@
 import SwiftUI
 
 struct ScheduleView: View {
+    @ObservedObject private var repository = AppointmentRepository.shared
     @State private var selectedDate = Date()
-    @State private var appointments: [Appointment] = []
     @State private var showingAddAppointment = false
     @State private var viewMode: ViewMode = .day
 
@@ -11,9 +11,7 @@ struct ScheduleView: View {
     }
 
     var filteredAppointments: [Appointment] {
-        appointments.filter { appointment in
-            Calendar.current.isDate(appointment.startTime, inSameDayAs: selectedDate)
-        }
+        repository.getAppointments(for: selectedDate)
     }
 
     var body: some View {
@@ -51,14 +49,9 @@ struct ScheduleView: View {
                 }
             }
             .sheet(isPresented: $showingAddAppointment) {
-                AddAppointmentView(appointments: $appointments, selectedDate: selectedDate)
+                AddAppointmentView(selectedDate: selectedDate)
             }
         }
-        .onAppear(perform: loadAppointments)
-    }
-
-    private func loadAppointments() {
-        // Load appointments
     }
 }
 
@@ -207,7 +200,7 @@ struct ScheduleAppointmentCard: View {
 
 struct AddAppointmentView: View {
     @Environment(\.dismiss) var dismiss
-    @Binding var appointments: [Appointment]
+    private let repository = AppointmentRepository.shared
     let selectedDate: Date
 
     @State private var serviceType: ServiceType = .swedish
@@ -266,7 +259,7 @@ struct AddAppointmentView: View {
             duration: duration,
             notes: notes.isEmpty ? nil : notes
         )
-        appointments.append(newAppointment)
+        repository.addAppointment(newAppointment)
         dismiss()
     }
 }

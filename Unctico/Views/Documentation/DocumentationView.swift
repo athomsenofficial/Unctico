@@ -2,18 +2,18 @@ import SwiftUI
 import Speech
 
 struct DocumentationView: View {
-    @State private var soapNotes: [SOAPNote] = []
+    @ObservedObject private var repository = SOAPNoteRepository.shared
     @State private var showingNewNote = false
 
     var body: some View {
         NavigationView {
             VStack {
-                if soapNotes.isEmpty {
+                if repository.soapNotes.isEmpty {
                     EmptyStateView(message: "No SOAP notes yet")
                         .padding()
                 } else {
                     List {
-                        ForEach(soapNotes.sorted(by: { $0.date > $1.date })) { note in
+                        ForEach(repository.soapNotes.sorted(by: { $0.date > $1.date })) { note in
                             NavigationLink(destination: SOAPNoteDetailView(note: note)) {
                                 SOAPNoteRowView(note: note)
                             }
@@ -33,14 +33,9 @@ struct DocumentationView: View {
                 }
             }
             .sheet(isPresented: $showingNewNote) {
-                NewSOAPNoteView(soapNotes: $soapNotes)
+                NewSOAPNoteView()
             }
         }
-        .onAppear(perform: loadSOAPNotes)
-    }
-
-    private func loadSOAPNotes() {
-        // Load SOAP notes
     }
 }
 
@@ -87,7 +82,7 @@ struct SOAPNoteRowView: View {
 
 struct NewSOAPNoteView: View {
     @Environment(\.dismiss) var dismiss
-    @Binding var soapNotes: [SOAPNote]
+    private let repository = SOAPNoteRepository.shared
 
     @State private var currentSection: SOAPSection = .subjective
     @State private var note = SOAPNote(clientId: UUID(), sessionId: UUID())
@@ -140,7 +135,7 @@ struct NewSOAPNoteView: View {
     }
 
     private func saveNote() {
-        soapNotes.append(note)
+        repository.addSOAPNote(note)
         dismiss()
     }
 }

@@ -1,19 +1,15 @@
 import SwiftUI
 
 struct ClientsView: View {
-    @State private var clients: [Client] = []
+    @ObservedObject private var repository = ClientRepository.shared
     @State private var searchText = ""
     @State private var showingAddClient = false
 
     var filteredClients: [Client] {
         if searchText.isEmpty {
-            return clients
+            return repository.clients
         }
-        return clients.filter { client in
-            client.fullName.localizedCaseInsensitiveContains(searchText) ||
-            (client.email?.localizedCaseInsensitiveContains(searchText) ?? false) ||
-            (client.phone?.localizedCaseInsensitiveContains(searchText) ?? false)
-        }
+        return repository.searchClients(query: searchText)
     }
 
     var body: some View {
@@ -46,14 +42,9 @@ struct ClientsView: View {
                 }
             }
             .sheet(isPresented: $showingAddClient) {
-                AddClientView(clients: $clients)
+                AddClientView()
             }
         }
-        .onAppear(perform: loadClients)
-    }
-
-    private func loadClients() {
-        // Load clients from storage
     }
 }
 
@@ -121,7 +112,7 @@ struct ClientRowView: View {
 
 struct AddClientView: View {
     @Environment(\.dismiss) var dismiss
-    @Binding var clients: [Client]
+    private let repository = ClientRepository.shared
 
     @State private var firstName = ""
     @State private var lastName = ""
@@ -171,7 +162,7 @@ struct AddClientView: View {
             email: email.isEmpty ? nil : email,
             phone: phone.isEmpty ? nil : phone
         )
-        clients.append(newClient)
+        repository.addClient(newClient)
         dismiss()
     }
 }

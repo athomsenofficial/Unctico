@@ -1,9 +1,16 @@
 import SwiftUI
 
 struct DashboardView: View {
-    @State private var todayAppointments: [Appointment] = []
-    @State private var weekRevenue: Double = 0
-    @State private var pendingTasks: Int = 0
+    @ObservedObject private var appointmentRepo = AppointmentRepository.shared
+    @ObservedObject private var transactionRepo = TransactionRepository.shared
+
+    var todayAppointments: [Appointment] {
+        appointmentRepo.getTodaysAppointments()
+    }
+
+    var weekRevenue: Double {
+        transactionRepo.getTotalRevenue(in: transactionRepo.getThisWeekRange())
+    }
 
     var body: some View {
         NavigationView {
@@ -11,7 +18,7 @@ struct DashboardView: View {
                 VStack(spacing: 20) {
                     WelcomeCard()
                     TodayOverviewSection(appointments: todayAppointments)
-                    QuickMetricsGrid(weekRevenue: weekRevenue, pendingTasks: pendingTasks)
+                    QuickMetricsGrid(weekRevenue: weekRevenue, pendingTasks: 0)
                     UpcomingAppointmentsList(appointments: todayAppointments)
                 }
                 .padding()
@@ -19,11 +26,6 @@ struct DashboardView: View {
             .navigationTitle("Dashboard")
             .background(Color.massageBackground.opacity(0.3))
         }
-        .onAppear(perform: loadDashboardData)
-    }
-
-    private func loadDashboardData() {
-        // Load dashboard data
     }
 }
 
