@@ -195,6 +195,9 @@ struct AddClientView: View {
 struct ClientDetailView: View {
     let client: Client
 
+    @State private var showingIntakeForm = false
+    @State private var showingMedicalHistory = false
+
     var body: some View {
         List {
             Section("Personal Information") {
@@ -213,9 +216,37 @@ struct ClientDetailView: View {
                 }
             }
 
-            Section("History") {
+            Section("Clinical Documentation") {
+                NavigationLink {
+                    IntakeFormView(client: client)
+                } label: {
+                    Label("Intake Form", systemImage: "doc.text.fill")
+                }
+
+                NavigationLink {
+                    MedicalHistoryView(client: client)
+                } label: {
+                    Label("Medical History", systemImage: "heart.text.square.fill")
+                }
+
+                NavigationLink {
+                    Text("SOAP Notes List - Coming Soon")
+                } label: {
+                    Label("SOAP Notes", systemImage: "doc.on.clipboard.fill")
+                }
+            }
+
+            Section("Appointments") {
                 Text("No appointments yet")
                     .foregroundStyle(.secondary)
+            }
+
+            Section("Billing") {
+                NavigationLink {
+                    Text("Client Invoices - Coming Soon")
+                } label: {
+                    Label("Invoices", systemImage: "dollarsign.circle.fill")
+                }
             }
         }
         .navigationTitle(client.fullName)
