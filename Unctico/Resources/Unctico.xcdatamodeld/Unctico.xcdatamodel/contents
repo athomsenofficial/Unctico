@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22758" systemVersion="23A344" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
+    <!-- Client Entity -->
+    <entity name="ClientEntity" representedClassName="ClientEntity" syncable="YES">
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="firstName" attributeType="String"/>
+        <attribute name="lastName" attributeType="String"/>
+        <attribute name="email" optional="YES" attributeType="String"/>
+        <attribute name="phoneNumber" optional="YES" attributeType="String"/>
+        <attribute name="dateOfBirth" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="emergencyContactName" optional="YES" attributeType="String"/>
+        <attribute name="emergencyContactPhone" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="preferenceNotes" optional="YES" attributeType="String"/>
+        <attribute name="isActive" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <relationship name="appointments" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="AppointmentEntity" inverseName="client" inverseEntity="AppointmentEntity"/>
+        <relationship name="soapNotes" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="SOAPNoteEntity" inverseName="client" inverseEntity="SOAPNoteEntity"/>
+    </entity>
+
+    <!-- Appointment Entity -->
+    <entity name="AppointmentEntity" representedClassName="AppointmentEntity" syncable="YES">
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="appointmentDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="duration" attributeType="Integer 16" defaultValueString="60" usesScalarValueType="YES"/>
+        <attribute name="serviceType" attributeType="String"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="status" attributeType="String" defaultValueString="scheduled"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="client" maxCount="1" deletionRule="Nullify" destinationEntity="ClientEntity" inverseName="appointments" inverseEntity="ClientEntity"/>
+    </entity>
+
+    <!-- SOAP Note Entity -->
+    <entity name="SOAPNoteEntity" representedClassName="SOAPNoteEntity" syncable="YES">
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="sessionDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="subjectiveEncrypted" attributeType="String"/>
+        <attribute name="objectiveEncrypted" attributeType="String"/>
+        <attribute name="assessmentEncrypted" attributeType="String"/>
+        <attribute name="planEncrypted" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+        <relationship name="client" maxCount="1" deletionRule="Nullify" destinationEntity="ClientEntity" inverseName="soapNotes" inverseEntity="ClientEntity"/>
+    </entity>
+
+    <!-- Invoice Entity -->
+    <entity name="InvoiceEntity" representedClassName="InvoiceEntity" syncable="YES">
+        <attribute name="id" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="invoiceNumber" attributeType="String"/>
+        <attribute name="invoiceDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="dueDate" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="amount" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="paidAmount" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="status" attributeType="String" defaultValueString="pending"/>
+        <attribute name="serviceDescription" optional="YES" attributeType="String"/>
+        <attribute name="createdAt" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="updatedAt" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+</model>
