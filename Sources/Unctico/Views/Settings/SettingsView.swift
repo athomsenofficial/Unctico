@@ -496,8 +496,7 @@ struct IntakeFormsView: View {
 
 struct ConsentFormsView: View {
     var body: some View {
-        Text("Consent Forms")
-            .navigationTitle("Consent Forms")
+        ConsentFormsManagementView()
     }
 }
 
@@ -510,8 +509,7 @@ struct LicensesView: View {
 
 struct HIPAAView: View {
     var body: some View {
-        Text("HIPAA Compliance")
-            .navigationTitle("HIPAA")
+        HIPAAComplianceView()
     }
 }
 

@@ -6,6 +6,16 @@ class AppState: ObservableObject {
     @Published var selectedClient: Client?
     @Published var isAuthenticated = false
 
+    // HIPAA Compliance
+    let auditLogRepository = AuditLogRepository()
+    lazy var hipaaComplianceService: HIPAAComplianceService = {
+        HIPAAComplianceService(auditLogRepository: auditLogRepository)
+    }()
+
+    // Current user for audit logging
+    var currentUserId: UUID = UUID()
+    var currentUserName: String = "Admin User"
+
     enum MainTab {
         case dashboard
         case clients
