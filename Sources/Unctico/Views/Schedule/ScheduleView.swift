@@ -132,6 +132,14 @@ struct DateSelector: View {
 
 struct ScheduleAppointmentCard: View {
     let appointment: Appointment
+    private let clientRepository = ClientRepository.shared
+
+    var clientName: String {
+        if let client = clientRepository.getClient(id: appointment.clientId) {
+            return client.fullName
+        }
+        return "Unknown Client"
+    }
 
     var body: some View {
         HStack(spacing: 16) {
@@ -162,7 +170,7 @@ struct ScheduleAppointmentCard: View {
                         .foregroundColor(.secondary)
                         .font(.caption)
 
-                    Text("Client Name")
+                    Text(clientName)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
@@ -202,8 +210,10 @@ struct ScheduleAppointmentCard: View {
 struct AddAppointmentView: View {
     @Environment(\.dismiss) var dismiss
     private let repository = AppointmentRepository.shared
+    private let clientRepository = ClientRepository.shared
     let selectedDate: Date
 
+    @State private var selectedClient: Client?
     @State private var serviceType: ServiceType = .swedish
     @State private var startTime = Date()
     @State private var duration: TimeInterval = 3600
@@ -212,6 +222,21 @@ struct AddAppointmentView: View {
     var body: some View {
         NavigationView {
             Form {
+                Section("Client") {
+                    if clientRepository.clients.isEmpty {
+                        Text("No clients available. Add a client first.")
+                            .foregroundColor(.secondary)
+                            .italic()
+                    } else {
+                        Picker("Select Client", selection: $selectedClient) {
+                            Text("Select a client").tag(nil as Client?)
+                            ForEach(clientRepository.clients) { client in
+                                Text(client.fullName).tag(client as Client?)
+                            }
+                        }
+                    }
+                }
+
                 Section("Service Details") {
                     Picker("Service Type", selection: $serviceType) {
                         ForEach(ServiceType.allCases, id: \.self) { type in
@@ -247,14 +272,25 @@ struct AddAppointmentView: View {
                     Button("Save") {
                         saveAppointment()
                     }
+                    .disabled(selectedClient == nil)
                 }
+            }
+        }
+        .onAppear {
+            // Set start time to the selected date with current time
+            let calendar = Calendar.current
+            let components = calendar.dateComponents([.year, .month, .day], from: selectedDate)
+            if let date = calendar.date(from: components) {
+                startTime = date
             }
         }
     }
 
     private func saveAppointment() {
+        guard let client = selectedClient else { return }
+
         let newAppointment = Appointment(
-            clientId: UUID(),
+            clientId: client.id,
             serviceType: serviceType,
             startTime: startTime,
             duration: duration,

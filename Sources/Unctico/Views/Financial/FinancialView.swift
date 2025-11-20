@@ -4,6 +4,8 @@ import SwiftUI
 struct FinancialView: View {
     @ObservedObject private var repository = TransactionRepository.shared
     @State private var selectedPeriod: TimePeriod = .thisMonth
+    @State private var showingAddExpense = false
+    @State private var showingRecordPayment = false
 
     enum TimePeriod: String, CaseIterable {
         case thisWeek = "This Week"
@@ -49,7 +51,10 @@ struct FinancialView: View {
                         netIncome: netIncome
                     )
 
-                    QuickFinancialActions()
+                    QuickFinancialActions(
+                        showingRecordPayment: $showingRecordPayment,
+                        showingAddExpense: $showingAddExpense
+                    )
 
                     RecentTransactionsSection(transactions: transactions)
                 }
@@ -57,6 +62,12 @@ struct FinancialView: View {
             }
             .navigationTitle("Financial")
             .background(Color.massageBackground.opacity(0.3))
+            .sheet(isPresented: $showingAddExpense) {
+                AddExpenseView()
+            }
+            .sheet(isPresented: $showingRecordPayment) {
+                RecordPaymentView()
+            }
         }
     }
 }
@@ -172,6 +183,9 @@ struct FinancialMetric: View {
 }
 
 struct QuickFinancialActions: View {
+    @Binding var showingRecordPayment: Bool
+    @Binding var showingAddExpense: Bool
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Quick Actions")
@@ -186,7 +200,7 @@ struct QuickFinancialActions: View {
                     icon: "dollarsign.circle.fill",
                     color: .soothingGreen
                 ) {
-                    // Record payment
+                    showingRecordPayment = true
                 }
 
                 ActionCard(
@@ -194,7 +208,7 @@ struct QuickFinancialActions: View {
                     icon: "cart.fill",
                     color: .orange
                 ) {
-                    // Add expense
+                    showingAddExpense = true
                 }
 
                 ActionCard(
@@ -202,7 +216,7 @@ struct QuickFinancialActions: View {
                     icon: "chart.bar.fill",
                     color: .calmingBlue
                 ) {
-                    // View reports
+                    // View reports - TODO: Navigate to analytics
                 }
 
                 ActionCard(
@@ -210,7 +224,7 @@ struct QuickFinancialActions: View {
                     icon: "doc.text.fill",
                     color: .tranquilTeal
                 ) {
-                    // Invoice client
+                    // Invoice client - TODO: Navigate to invoice generator
                 }
             }
         }
@@ -342,5 +356,195 @@ struct Transaction: Identifiable, Codable {
     enum TransactionType: String, Codable {
         case income = "Income"
         case expense = "Expense"
+    }
+}
+
+// MARK: - Add Expense View
+struct AddExpenseView: View {
+    @Environment(\.dismiss) var dismiss
+    private let repository = TransactionRepository.shared
+
+    @State private var description = ""
+    @State private var amount = ""
+    @State private var date = Date()
+    @State private var category = ExpenseCategory.supplies
+
+    enum ExpenseCategory: String, CaseIterable {
+        case supplies = "Supplies"
+        case rent = "Rent"
+        case utilities = "Utilities"
+        case marketing = "Marketing"
+        case insurance = "Insurance"
+        case equipment = "Equipment"
+        case licenses = "Licenses & Fees"
+        case continuing_education = "Continuing Education"
+        case professional_dues = "Professional Dues"
+        case software = "Software & Subscriptions"
+        case travel = "Travel & Mileage"
+        case other = "Other"
+    }
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section("Expense Details") {
+                    TextField("Description", text: $description)
+                        .autocapitalization(.words)
+
+                    HStack {
+                        Text("$")
+                        TextField("Amount", text: $amount)
+                            .keyboardType(.decimalPad)
+                    }
+
+                    DatePicker("Date", selection: $date, displayedComponents: .date)
+                }
+
+                Section("Category") {
+                    Picker("Category", selection: $category) {
+                        ForEach(ExpenseCategory.allCases, id: \.self) { cat in
+                            Text(cat.rawValue).tag(cat)
+                        }
+                    }
+                }
+
+                Section {
+                    Text("Track your business expenses for accurate profit calculations and tax deductions.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .navigationTitle("Add Expense")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        saveExpense()
+                    }
+                    .disabled(description.isEmpty || amount.isEmpty)
+                }
+            }
+        }
+    }
+
+    private func saveExpense() {
+        guard let amountValue = Double(amount), amountValue > 0 else { return }
+
+        let transaction = Transaction(
+            description: description,
+            amount: amountValue,
+            date: date,
+            type: .expense,
+            category: category.rawValue
+        )
+        repository.addTransaction(transaction)
+        dismiss()
+    }
+}
+
+// MARK: - Record Payment View
+struct RecordPaymentView: View {
+    @Environment(\.dismiss) var dismiss
+    private let repository = TransactionRepository.shared
+    private let clientRepository = ClientRepository.shared
+
+    @State private var selectedClient: Client?
+    @State private var amount = ""
+    @State private var date = Date()
+    @State private var serviceType = "Massage Therapy"
+    @State private var paymentMethod = PaymentMethod.cash
+
+    enum PaymentMethod: String, CaseIterable {
+        case cash = "Cash"
+        case creditCard = "Credit Card"
+        case debitCard = "Debit Card"
+        case check = "Check"
+        case venmo = "Venmo"
+        case zelle = "Zelle"
+        case other = "Other"
+    }
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section("Client") {
+                    if clientRepository.clients.isEmpty {
+                        Text("No clients available. Add a client first.")
+                            .foregroundColor(.secondary)
+                            .italic()
+                    } else {
+                        Picker("Select Client", selection: $selectedClient) {
+                            Text("Select a client").tag(nil as Client?)
+                            ForEach(clientRepository.clients) { client in
+                                Text(client.fullName).tag(client as Client?)
+                            }
+                        }
+                    }
+                }
+
+                Section("Payment Details") {
+                    HStack {
+                        Text("$")
+                        TextField("Amount", text: $amount)
+                            .keyboardType(.decimalPad)
+                    }
+
+                    TextField("Service", text: $serviceType)
+                        .autocapitalization(.words)
+
+                    DatePicker("Date", selection: $date, displayedComponents: .date)
+
+                    Picker("Payment Method", selection: $paymentMethod) {
+                        ForEach(PaymentMethod.allCases, id: \.self) { method in
+                            Text(method.rawValue).tag(method)
+                        }
+                    }
+                }
+
+                Section {
+                    Text("Record payments received for services rendered.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .navigationTitle("Record Payment")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        savePayment()
+                    }
+                    .disabled(selectedClient == nil || amount.isEmpty)
+                }
+            }
+        }
+    }
+
+    private func savePayment() {
+        guard let client = selectedClient,
+              let amountValue = Double(amount),
+              amountValue > 0 else { return }
+
+        let transaction = Transaction(
+            description: "\(serviceType) - \(client.fullName)",
+            amount: amountValue,
+            date: date,
+            type: .income,
+            category: "Service Revenue"
+        )
+        repository.addTransaction(transaction)
+        dismiss()
     }
 }

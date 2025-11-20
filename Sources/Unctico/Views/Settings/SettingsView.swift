@@ -184,25 +184,299 @@ struct SettingRow: View {
     }
 }
 
-// Placeholder views for navigation destinations
+// MARK: - Business Information View
 struct BusinessInfoView: View {
+    @ObservedObject private var repository = PracticeSettingsRepository.shared
+    @State private var businessInfo: BusinessInfo
+    @Environment(\.dismiss) var dismiss
+
+    init() {
+        _businessInfo = State(initialValue: PracticeSettingsRepository.shared.settings.businessInfo)
+    }
+
     var body: some View {
-        Text("Business Information")
-            .navigationTitle("Business Info")
+        Form {
+            Section("Practice Details") {
+                TextField("Practice Name", text: $businessInfo.practiceName)
+                TextField("Owner/Therapist Name", text: $businessInfo.ownerName)
+                TextField("License Number", text: $businessInfo.licenseNumber)
+                TextField("Tax ID (EIN)", text: $businessInfo.taxId)
+            }
+
+            Section("Contact Information") {
+                TextField("Phone", text: $businessInfo.phone)
+                    .keyboardType(.phonePad)
+                TextField("Email", text: $businessInfo.email)
+                    .keyboardType(.emailAddress)
+                    .autocapitalization(.none)
+                TextField("Website", text: $businessInfo.website)
+                    .keyboardType(.URL)
+                    .autocapitalization(.none)
+            }
+
+            Section("Business Address") {
+                TextField("Street Address", text: $businessInfo.address.street)
+                TextField("City", text: $businessInfo.address.city)
+                TextField("State", text: $businessInfo.address.state)
+                TextField("ZIP Code", text: $businessInfo.address.zipCode)
+                    .keyboardType(.numberPad)
+            }
+        }
+        .navigationTitle("Business Info")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("Save") {
+                    repository.updateBusinessInfo(businessInfo)
+                }
+            }
+        }
     }
 }
 
+// MARK: - Services View
 struct ServicesView: View {
+    @ObservedObject private var repository = PracticeSettingsRepository.shared
+    @State private var showingAddService = false
+
     var body: some View {
-        Text("Services & Pricing")
-            .navigationTitle("Services")
+        List {
+            Section {
+                ForEach(repository.settings.services) { service in
+                    NavigationLink(destination: EditServiceView(service: service)) {
+                        ServiceRow(service: service)
+                    }
+                }
+                .onDelete(perform: deleteService)
+            }
+
+            if repository.settings.services.isEmpty {
+                Section {
+                    VStack(spacing: 12) {
+                        Image(systemName: "list.bullet.rectangle")
+                            .font(.system(size: 50))
+                            .foregroundColor(.secondary)
+
+                        Text("No services configured")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+
+                        Text("Add services you offer to display pricing and enable booking")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                }
+            }
+        }
+        .navigationTitle("Services & Pricing")
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button(action: { showingAddService = true }) {
+                    Image(systemName: "plus")
+                }
+            }
+        }
+        .sheet(isPresented: $showingAddService) {
+            AddServiceView()
+        }
+    }
+
+    private func deleteService(at offsets: IndexSet) {
+        offsets.forEach { index in
+            let service = repository.settings.services[index]
+            repository.deleteService(service)
+        }
     }
 }
 
-struct AvailabilityView: View {
+struct ServiceRow: View {
+    let service: Service
+
     var body: some View {
-        Text("Availability Settings")
-            .navigationTitle("Availability")
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(service.name)
+                    .font(.headline)
+
+                HStack {
+                    Text("\(service.durationMinutes) min")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+
+                    if !service.isActive {
+                        Text("• Inactive")
+                            .font(.caption)
+                            .foregroundColor(.orange)
+                    }
+                }
+            }
+
+            Spacer()
+
+            Text(service.price, format: .currency(code: "USD"))
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(.tranquilTeal)
+        }
+    }
+}
+
+struct AddServiceView: View {
+    @Environment(\.dismiss) var dismiss
+    private let repository = PracticeSettingsRepository.shared
+
+    @State private var name = ""
+    @State private var duration = 60
+    @State private var price = ""
+    @State private var description = ""
+
+    let durationOptions = [30, 45, 60, 75, 90, 120]
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section("Service Details") {
+                    TextField("Service Name", text: $name)
+                        .autocapitalization(.words)
+
+                    Picker("Duration", selection: $duration) {
+                        ForEach(durationOptions, id: \.self) { minutes in
+                            Text("\(minutes) minutes").tag(minutes)
+                        }
+                    }
+
+                    HStack {
+                        Text("$")
+                        TextField("Price", text: $price)
+                            .keyboardType(.decimalPad)
+                    }
+
+                    TextField("Description (optional)", text: $description, axis: .vertical)
+                        .lineLimit(3...6)
+                }
+            }
+            .navigationTitle("Add Service")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") { dismiss() }
+                }
+
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") { saveService() }
+                        .disabled(name.isEmpty || price.isEmpty)
+                }
+            }
+        }
+    }
+
+    private func saveService() {
+        guard let priceValue = Double(price), priceValue > 0 else { return }
+
+        let service = Service(
+            name: name,
+            duration: TimeInterval(duration * 60),
+            price: priceValue,
+            description: description
+        )
+        repository.addService(service)
+        dismiss()
+    }
+}
+
+struct EditServiceView: View {
+    @ObservedObject private var repository = PracticeSettingsRepository.shared
+    @State private var service: Service
+
+    init(service: Service) {
+        _service = State(initialValue: service)
+    }
+
+    var body: some View {
+        Form {
+            Section("Service Details") {
+                TextField("Service Name", text: $service.name)
+
+                HStack {
+                    Text("$")
+                    TextField("Price", value: $service.price, format: .number)
+                        .keyboardType(.decimalPad)
+                }
+
+                TextField("Description", text: $service.description, axis: .vertical)
+                    .lineLimit(3...6)
+            }
+
+            Section {
+                Toggle("Active Service", isOn: $service.isActive)
+            }
+        }
+        .navigationTitle("Edit Service")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("Save") {
+                    repository.updateService(service)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Availability View
+struct AvailabilityView: View {
+    @ObservedObject private var repository = PracticeSettingsRepository.shared
+    @State private var availability: WeeklyAvailability
+
+    init() {
+        _availability = State(initialValue: PracticeSettingsRepository.shared.settings.availability)
+    }
+
+    var body: some View {
+        Form {
+            ForEach(WeeklyAvailability.Weekday.allCases, id: \.self) { weekday in
+                Section(weekday.rawValue) {
+                    Toggle("Available", isOn: binding(for: weekday).isAvailable)
+
+                    if binding(for: weekday).wrappedValue.isAvailable {
+                        HStack {
+                            Text("Start Time")
+                            Spacer()
+                            TextField("09:00", text: binding(for: weekday).startTime)
+                                .multilineTextAlignment(.trailing)
+                                .keyboardType(.numbersAndPunctuation)
+                        }
+
+                        HStack {
+                            Text("End Time")
+                            Spacer()
+                            TextField("17:00", text: binding(for: weekday).endTime)
+                                .multilineTextAlignment(.trailing)
+                                .keyboardType(.numbersAndPunctuation)
+                        }
+                    }
+                }
+            }
+        }
+        .navigationTitle("Availability")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button("Save") {
+                    repository.updateAvailability(availability)
+                }
+            }
+        }
+    }
+
+    private func binding(for weekday: WeeklyAvailability.Weekday) -> Binding<DayAvailability> {
+        Binding(
+            get: { availability.availability(for: weekday) },
+            set: { availability.setAvailability($0, for: weekday) }
+        )
     }
 }
 
