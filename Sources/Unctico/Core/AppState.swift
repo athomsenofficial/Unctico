@@ -20,6 +20,10 @@ class AppState: ObservableObject {
     let communicationService = CommunicationService.shared
     let communicationRepository = CommunicationRepository.shared
 
+    // Tax Compliance System
+    let taxService = TaxService.shared
+    let taxRepository = TaxRepository.shared
+
     enum MainTab {
         case dashboard
         case clients

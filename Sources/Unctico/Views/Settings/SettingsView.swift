@@ -71,6 +71,10 @@ struct SettingsView: View {
                         SettingRow(icon: "lock.shield.fill", title: "HIPAA Compliance", color: .red)
                     }
 
+                    NavigationLink(destination: TaxComplianceView()) {
+                        SettingRow(icon: "doc.text.fill", title: "Tax Compliance", color: .green)
+                    }
+
                     NavigationLink(destination: InsuranceView()) {
                         SettingRow(icon: "cross.case.fill", title: "Insurance Settings", color: .orange)
                     }
