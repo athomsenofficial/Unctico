@@ -42,6 +42,10 @@ struct SettingsView: View {
                     NavigationLink(destination: AvailabilityView()) {
                         SettingRow(icon: "calendar.badge.clock", title: "Availability", color: .tranquilTeal)
                     }
+
+                    NavigationLink(destination: CommunicationView()) {
+                        SettingRow(icon: "envelope.badge.fill", title: "Client Communications", color: .softLavender)
+                    }
                 }
 
                 Section("Clinical") {

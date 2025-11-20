@@ -16,6 +16,10 @@ class AppState: ObservableObject {
     var currentUserId: UUID = UUID()
     var currentUserName: String = "Admin User"
 
+    // Communication System
+    let communicationService = CommunicationService.shared
+    let communicationRepository = CommunicationRepository.shared
+
     enum MainTab {
         case dashboard
         case clients
