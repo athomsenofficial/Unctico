@@ -488,9 +488,71 @@ struct TemplatesView: View {
 }
 
 struct IntakeFormsView: View {
+    @StateObject private var repository = IntakeFormRepository.shared
+
     var body: some View {
-        Text("Intake Forms")
-            .navigationTitle("Intake Forms")
+        List {
+            Section(header: Text("Statistics")) {
+                let stats = repository.getStatistics()
+                HStack {
+                    Text("Total Forms")
+                    Spacer()
+                    Text("\(stats.totalForms)")
+                        .foregroundColor(.secondary)
+                }
+
+                HStack {
+                    Text("Completed")
+                    Spacer()
+                    Text("\(stats.completedForms)")
+                        .foregroundColor(.green)
+                }
+
+                HStack {
+                    Text("In Progress")
+                    Spacer()
+                    Text("\(stats.inProgressForms)")
+                        .foregroundColor(.orange)
+                }
+
+                HStack {
+                    Text("Completion Rate")
+                    Spacer()
+                    Text("\(Int(stats.completionRate))%")
+                        .foregroundColor(.blue)
+                }
+            }
+
+            Section(header: Text("Templates")) {
+                ForEach(repository.templates) { template in
+                    HStack {
+                        Image(systemName: template.category.icon)
+                            .foregroundColor(template.category.color)
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(template.name)
+                                .font(.headline)
+
+                            Text("\(template.questions.count) questions")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Spacer()
+
+                        if template.isDefault {
+                            Text("Default")
+                                .font(.caption)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.blue.opacity(0.1))
+                                .cornerRadius(4)
+                        }
+                    }
+                }
+            }
+        }
+        .navigationTitle("Intake Forms")
     }
 }
 
@@ -502,8 +564,7 @@ struct ConsentFormsView: View {
 
 struct LicensesView: View {
     var body: some View {
-        Text("Licenses & Certifications")
-            .navigationTitle("Licenses")
+        LicenseManagementView()
     }
 }
 
