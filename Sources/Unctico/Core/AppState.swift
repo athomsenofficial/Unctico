@@ -31,6 +31,10 @@ class AppState: ObservableObject {
     let inventoryService = InventoryService.shared
     let inventoryRepository = InventoryRepository.shared
 
+    // Team & Staff Management
+    let staffService = StaffService.shared
+    let staffRepository = StaffRepository.shared
+
     enum MainTab {
         case dashboard
         case clients

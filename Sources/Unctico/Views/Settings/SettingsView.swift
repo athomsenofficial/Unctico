@@ -54,6 +54,10 @@ struct SettingsView: View {
                     NavigationLink(destination: InventoryManagementView()) {
                         SettingRow(icon: "box.fill", title: "Inventory Management", color: .purple)
                     }
+
+                    NavigationLink(destination: TeamManagementView()) {
+                        SettingRow(icon: "person.3.fill", title: "Team Management", color: .blue)
+                    }
                 }
 
                 Section("Clinical") {
