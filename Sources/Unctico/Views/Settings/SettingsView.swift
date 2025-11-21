@@ -66,6 +66,10 @@ struct SettingsView: View {
                     NavigationLink(destination: ClientPortalManagementView()) {
                         SettingRow(icon: "globe", title: "Client Portal", color: .teal)
                     }
+
+                    NavigationLink(destination: GiftCardsPromotionsView()) {
+                        SettingRow(icon: "giftcard.fill", title: "Gift Cards & Promotions", color: .purple)
+                    }
                 }
 
                 Section("Clinical") {

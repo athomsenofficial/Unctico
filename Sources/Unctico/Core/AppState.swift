@@ -43,6 +43,10 @@ class AppState: ObservableObject {
     let clientPortalService = ClientPortalService.shared
     let clientPortalRepository = ClientPortalRepository.shared
 
+    // Gift Cards & Promotions
+    let giftCardPromotionService = GiftCardPromotionService.shared
+    let giftCardPromotionRepository = GiftCardPromotionRepository.shared
+
     enum MainTab {
         case dashboard
         case clients
