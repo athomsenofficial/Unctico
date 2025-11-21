@@ -50,6 +50,10 @@ struct SettingsView: View {
                     NavigationLink(destination: AnalyticsDashboardView()) {
                         SettingRow(icon: "chart.bar.fill", title: "Analytics & Reports", color: .calmingBlue)
                     }
+
+                    NavigationLink(destination: InventoryManagementView()) {
+                        SettingRow(icon: "box.fill", title: "Inventory Management", color: .purple)
+                    }
                 }
 
                 Section("Clinical") {
