@@ -62,6 +62,10 @@ struct SettingsView: View {
                     NavigationLink(destination: MarketingAutomationView()) {
                         SettingRow(icon: "envelope.badge.fill", title: "Marketing Automation", color: .orange)
                     }
+
+                    NavigationLink(destination: ClientPortalManagementView()) {
+                        SettingRow(icon: "globe", title: "Client Portal", color: .teal)
+                    }
                 }
 
                 Section("Clinical") {
