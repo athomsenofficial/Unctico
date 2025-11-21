@@ -24,6 +24,9 @@ let package = Package(
             resources: [
                 .process("Assets.xcassets"),
                 .process("Preview Content")
+            ],
+            swiftSettings: [
+                .enableUpcomingFeature("BareSlashRegexLiterals")
             ]),
     ]
 )
