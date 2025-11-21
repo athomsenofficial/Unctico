@@ -46,6 +46,10 @@ struct SettingsView: View {
                     NavigationLink(destination: CommunicationView()) {
                         SettingRow(icon: "envelope.badge.fill", title: "Client Communications", color: .softLavender)
                     }
+
+                    NavigationLink(destination: AnalyticsDashboardView()) {
+                        SettingRow(icon: "chart.bar.fill", title: "Analytics & Reports", color: .calmingBlue)
+                    }
                 }
 
                 Section("Clinical") {

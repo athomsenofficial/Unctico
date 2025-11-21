@@ -24,6 +24,9 @@ class AppState: ObservableObject {
     let taxService = TaxService.shared
     let taxRepository = TaxRepository.shared
 
+    // Analytics & Reporting
+    let analyticsService = AnalyticsService.shared
+
     enum MainTab {
         case dashboard
         case clients
